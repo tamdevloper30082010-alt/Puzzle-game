@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>PUZZLE BATTALION</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ================= HOME SCREEN ================= -->
+<div id="homeScreen" class="screen">
+  <div class="home-inner">
+    <h1 class="home-title">PUZZLE<br>BATTALION</h1>
+    <p class="home-sub">Xếp hình. Triệu hồi. Phá Nhà Chính đối thủ.</p>
+
+    <div class="home-menu">
+      <button id="menuHost" class="btn-tac big">TẠO PHÒNG</button>
+
+      <div class="menu-join">
+        <button id="menuJoinToggle" class="btn-tac big">VÀO PHÒNG</button>
+        <div id="joinPanel" class="join-panel hidden">
+          <input id="homeRoomInput" maxlength="4" inputmode="numeric" placeholder="MÃ PHÒNG">
+          <button id="menuJoinConfirm" class="btn-tac">XÁC NHẬN</button>
+        </div>
+      </div>
+
+      <div class="menu-bot">
+        <button id="menuBotToggle" class="btn-tac big">CHƠI VỚI MÁY</button>
+        <div id="botPanel" class="join-panel bot-panel hidden">
+          <button class="btn-tac bot-diff" data-diff="easy">DỄ</button>
+          <button class="btn-tac bot-diff" data-diff="medium">THƯỜNG</button>
+          <button class="btn-tac bot-diff" data-diff="hard">KHÓ</button>
+        </div>
+      </div>
+
+      <div class="menu-lan">
+        <button id="menuLanToggle" class="btn-tac big">GHÉP LAN (KHÔNG CẦN MẠNG)</button>
+        <div id="lanPanel" class="join-panel lan-panel hidden">
+          <p class="lan-hint">Dùng khi 2 máy chung wifi/hotspot nhưng mạng yếu hoặc không có Internet — chỉ cần gửi qua lại 1 đoạn mã ngắn (Bluetooth, Zalo, đọc miệng...).</p>
+          <div class="lan-row">
+            <button id="lanHostBtn" class="btn-tac">MÁY 1: TẠO</button>
+            <button id="lanJoinBtn" class="btn-tac">MÁY 2: GHÉP</button>
+          </div>
+
+          <div id="lanHostFlow" class="lan-flow hidden">
+            <button id="lanCreateOfferBtn" class="btn-tac small">1. TẠO MÃ</button>
+            <textarea id="lanOfferOut" class="lan-code" readonly placeholder="Mã sẽ hiện ở đây — gửi mã này cho máy 2"></textarea>
+            <button id="lanCopyOfferBtn" class="btn-tac small">SAO CHÉP MÃ</button>
+            <p class="lan-hint">Dán mã PHẢN HỒI từ máy 2 vào đây rồi bấm KẾT NỐI:</p>
+            <textarea id="lanAnswerIn" class="lan-code" placeholder="Dán mã phản hồi của máy 2 vào đây"></textarea>
+            <button id="lanConnectHostBtn" class="btn-tac small">2. KẾT NỐI</button>
+          </div>
+
+          <div id="lanJoinFlow" class="lan-flow hidden">
+            <p class="lan-hint">Dán mã từ máy 1 vào đây:</p>
+            <textarea id="lanOfferIn" class="lan-code" placeholder="Dán mã của máy 1 vào đây"></textarea>
+            <button id="lanCreateAnswerBtn" class="btn-tac small">1. TẠO MÃ PHẢN HỒI</button>
+            <textarea id="lanAnswerOut" class="lan-code" readonly placeholder="Mã phản hồi sẽ hiện ở đây — gửi lại cho máy 1"></textarea>
+            <button id="lanCopyAnswerBtn" class="btn-tac small">2. SAO CHÉP, GỬI LẠI MÁY 1</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="homeStatus" class="home-status"></div>
+  </div>
+</div>
+
+<!-- ================= GAME SCREEN ================= -->
+<div id="app" class="hidden">
+
+  <!-- ============ TOP BAR : base HP only (kept minimal so it never wraps) ============ -->
+  <header id="topbar">
+    <div class="base-readout mine">
+      <span class="side-tag">BẠN</span>
+      <div class="hpbar"><div id="hpMine" class="hpfill"></div></div>
+      <span id="hpMineNum" class="hpnum">3000</span>
+    </div>
+    <button id="btnHome" class="btn-tac small home-btn" title="Về trang chủ">☰</button>
+    <div class="base-readout theirs">
+      <span class="side-tag">ĐỊCH</span>
+      <div class="hpbar"><div id="hpEnemy" class="hpfill enemy"></div></div>
+      <span id="hpEnemyNum" class="hpnum">3000</span>
+    </div>
+  </header>
+
+  <!-- ============ connection status strip ============ -->
+  <div id="statusStrip">
+    <span id="connState" class="conn-dot offline"></span>
+    <span id="roomLabel" class="room-label"></span>
+  </div>
+
+  <!-- ============ BULLET CHAT STRIP ============ -->
+  <div id="danmakuLayer" aria-hidden="true"></div>
+
+  <!-- ============ BATTLEFIELD (upper half) ============ -->
+  <section id="battlefieldWrap">
+    <canvas id="battlefield" width="1000" height="260"></canvas>
+    <div id="gameOverBanner" class="hidden"></div>
+  </section>
+
+  <!-- ============ MEDIA + CHAT DOCK ============ -->
+  <section id="mediaDock">
+    <div class="video-slot">
+      <video id="localVideo" autoplay muted playsinline></video>
+      <span class="video-tag">BẠN</span>
+    </div>
+    <div class="video-slot">
+      <video id="remoteVideo" autoplay playsinline></video>
+      <span class="video-tag">ĐỊCH</span>
+    </div>
+    <div class="media-controls">
+      <button id="btnMic" class="btn-tac small" data-on="1">MIC</button>
+      <button id="btnCam" class="btn-tac small" data-on="1">CAM</button>
+    </div>
+    <form id="chatForm" autocomplete="off">
+      <input id="chatInput" maxlength="60" placeholder="Nhắn gì đó chạy ngang màn hình..." autocomplete="off">
+      <button type="submit" class="btn-tac small">GỬI</button>
+    </form>
+  </section>
+
+  <!-- ============ PUZZLE GRID (lower half) ============ -->
+  <section id="puzzleWrap">
+    <canvas id="puzzleGrid" width="300" height="375"></canvas>
+
+    <!-- kéo một khối từ đây thả vào lưới phía trên để xếp hình -->
+    <div id="pieceTray">
+      <canvas class="tray-slot" width="96" height="96"></canvas>
+      <canvas class="tray-slot" width="96" height="96"></canvas>
+      <canvas class="tray-slot" width="96" height="96"></canvas>
+    </div>
+
+  </section>
+
+</div>
+
+<!-- khối đang được kéo — nổi phía trên ngón tay, đi theo con trỏ/ngón tay -->
+<canvas id="dragGhost" class="hidden"></canvas>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+<script src="game.js"></script>
+<script src="net.js"></script>
+</body>
+</html>
